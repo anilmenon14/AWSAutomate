@@ -83,7 +83,7 @@ def stop_instances(project,num,stopall):
 @instances_actions.command('start')
 @click.option('--project',default=None,help="Starts instances only with tag(of name'Project') specified")
 @click.option('--num',default=1,help="Number of instances to start")
-def stop_instances(project,num):
+def start_instances(project,num):
     """Starts number of instances specified (Default = 1)\n(1) Starts existing stopped instances first \n(2) If no 'project' tag specified , will start any stopped instance
     """
     instances = retrieve_instances(project)
@@ -102,6 +102,28 @@ def stop_instances(project,num):
     print('****Following Instances will be started****')
     print(ids[0:startnum])
     myEc2.instances.filter(InstanceIds=ids[0:startnum]).start()
+    return
+
+@instances_actions.command('terminate')
+@click.option('--project',default=None,help="List of stopped instances with tag(of name'Project') specified")
+def terminate_stopped_instances(project):
+    """Starts number of instances specified (Default = 1)\n(1) Starts existing stopped instances first \n(2) If no 'project' tag specified , will start any stopped instance
+    """
+    instances = retrieve_instances(project)
+    ids = {}
+    #find stopped instances
+    count = 0
+    for i in instances:
+        if i.state['Name'] == 'stopped':
+            count = count + 1;
+            ids[i.id] = {'slno': count, 'type': i.instance_type, 'private_dns_name': i.private_dns_name}
+    if len(ids) == 0:
+        print('0 instances available to terminate')
+        return
+    print("Existing {} stopped instances".format(len(ids)))
+    print('Select options below to terminate:')
+    for id in ids:
+        print("{}    {}    {}    {}".format(ids[id]['slno'],id,ids[id]['type'],ids[id]['private_dns_name']))
     return
 
 if __name__ == "__main__":
