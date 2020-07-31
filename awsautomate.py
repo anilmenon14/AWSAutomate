@@ -107,8 +107,7 @@ def start_instances(project,num):
 @instances_actions.command('terminate')
 @click.option('--project',default=None,help="List of stopped instances with tag(of name'Project') specified")
 def terminate_stopped_instances(project):
-    """Starts number of instances specified (Default = 1)\n(1) Starts existing stopped instances first \n(2) If no 'project' tag specified , will start any stopped instance
-    """
+    """Lists out stopped instances and allows choice of stopped instance to terminate"""
     instances = retrieve_instances(project)
     ids = {}
     #find stopped instances
@@ -121,9 +120,41 @@ def terminate_stopped_instances(project):
         print('0 instances available to terminate')
         return
     print("Existing {} stopped instances".format(len(ids)))
-    print('Select options below to terminate:')
+    print('Select serial number of options below to terminate:')
+    print('Sl.no #')
+    listSl = list(map(lambda i: str(ids[i]['slno']), ids))
+    print(listSl)
     for id in ids:
-        print("{}    {}    {}    {}".format(ids[id]['slno'],id,ids[id]['type'],ids[id]['private_dns_name']))
+        print("{}          {}    {}    {}".format(ids[id]['slno'],id,ids[id]['type'],ids[id]['private_dns_name']))
+    print("Select serial number of options below to terminate ('Q' to quit) : ",end="")
+    choice = input();
+    while True:
+        if choice == 'Q':
+            print('Termination process cancelled')
+            break
+        elif choice in listSl:
+            for i in ids:
+                if ids[i]['slno'] == int(choice):
+                    IdFromChoice = i;
+            print("Your choice is '{}'----'{}':".format(choice,IdFromChoice))
+            print('Please confirm (Y/N): ',end='')
+            confirm = input()
+            while True:
+                if confirm.upper() == 'Y':
+                    myEc2.instances.filter(InstanceIds=[IdFromChoice]).terminate()
+                    print('Instance has been terminated')
+                    break
+                elif confirm.upper() == 'N':
+                    print('Termination process cancelled')
+                    break
+                else:
+                    print('Please confirm (Y/N): ',end='')
+                    confirm = input()
+            break
+        print("Please select a valid serial number ('Q' to quit) : ",end="")
+        choice = input();
+
+
     return
 
 if __name__ == "__main__":

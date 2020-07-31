@@ -19,5 +19,45 @@ to create a profile name with name as 'awsautomate' (as used in the code in this
 
 ## Execute program
 
-Navigate to project root folder and run below:   
-`pipenv run python awsautomate`
+Navigate to project root folder to run below:  
+
+### List instances
+`pipenv run python awsautomate list`
+
+List all of the EC2 instances
+
+Options:
+--project TEXT  Lists out instances only of tag(of name'Project') specified
+
+### Stop instances
+`pipenv run python awsautomate stop`
+
+Stops number of instances specified (Default = 1)
+(1) Stops oldest instance first
+(2) If no 'project' tag specified , will stop any instance (based on oldest)     
+(3) To stop all instances of project, pass 'stopall' option
+
+Options:
+--project TEXT  Stops instances only of tag(of name'Project') specified
+--num INTEGER   Number of instances to stop
+--stopall TEXT  Pass --stopall=True to stop every instance in specified
+                project (or all if no project specified)
+
+### Start instances
+`pipenv run python awsautomate start`
+
+Starts number of instances specified (Default = 1)
+(1) Starts existing stopped instances first  
+(2) If no 'project' tag specified , will start any stopped instance
+
+Options:
+--project TEXT  Starts instances only with tag(of name'Project') specified
+--num INTEGER   Number of instances to start
+
+### Terminate instances
+`pipenv run python awsautomate terminate`
+
+Lists out stopped instances and allows choice of stopped instance to terminate
+
+Options:
+--project TEXT  List of stopped instances with tag(of name'Project')specified
