@@ -33,9 +33,9 @@ Options:
 `pipenv run python awsautomate stop`
 
 Stops number of instances specified (Default = 1)
-(1) Stops oldest instance first
-(2) If no 'project' tag specified , will stop any instance (based on oldest)     
-(3) To stop all instances of project, pass 'stopall' option
+(1) Stops oldest instance first  
+(2) If no 'project' tag specified , will stop any instance (based on oldest)      
+(3) To stop all instances of project, pass 'stopall' option  
 
 Options:
 --project TEXT  Stops instances only of tag(of name'Project') specified
@@ -46,9 +46,9 @@ Options:
 ### Start instances
 `pipenv run python awsautomate start`
 
-Starts number of instances specified (Default = 1)
+Starts number of instances specified (Default = 1)  
 (1) Starts existing stopped instances first  
-(2) If no 'project' tag specified , will start any stopped instance
+(2) If no 'project' tag specified , will start any stopped instance    
 
 Options:
 --project TEXT  Starts instances only with tag(of name'Project') specified
