@@ -1,6 +1,9 @@
 import boto3
 import click
 
+session = boto3.Session(profile_name="awsautomate")
+myEc2 = session.resource('ec2')
+
 #helper functions
 
 def retrieve_instances(project):
@@ -162,6 +165,4 @@ def terminate_stopped_instances(project):
     return
 
 if __name__ == "__main__":
-    session = boto3.Session(profile_name="awsautomate")
-    myEc2 = session.resource('ec2')
     cli();

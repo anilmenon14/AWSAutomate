@@ -33,7 +33,7 @@ Navigate to project root folder to run below
 List all of the EC2 instances  
 
 Options:  
-*project** TEXT  Lists out instances only of tag(of name'Project') specified  
+*project* TEXT  Lists out instances only of tag(of name'Project') specified  
 
 ### Stop instances
 `pipenv run python awsautomate instances stop`
@@ -65,4 +65,4 @@ Options:
 Lists out stopped instances and allows choice of stopped instance to terminate  
 
 Options:  
-*project* TEXT  List of stopped instances with tag(of name'Project')specified  
+*project* TEXT  List of stopped instances with tag(of name'Project') specified  
