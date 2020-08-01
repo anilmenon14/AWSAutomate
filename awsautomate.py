@@ -13,6 +13,10 @@ def retrieve_instances(project):
 
 
 @click.group()
+def cli():
+    "Main CLI group calling instances, volumes and snapshot groups"
+
+@cli.group('instances')
 def instances_actions():
     "Actions to run on EC2 instances"
     #instances_actions has been decorated to be the parent function of all commands
@@ -160,4 +164,4 @@ def terminate_stopped_instances(project):
 if __name__ == "__main__":
     session = boto3.Session(profile_name="awsautomate")
     myEc2 = session.resource('ec2')
-    instances_actions();
+    cli();
