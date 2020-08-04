@@ -1,8 +1,10 @@
 import boto3
 import click
+import pathlib
 
 session = boto3.Session(profile_name="awsautomate")
 myEc2 = session.resource('ec2')
+myS3 = session.resource('s3')
 
 #helper functions
 
@@ -23,6 +25,10 @@ def cli():
 def instances_actions():
     "Actions to run on EC2 instances"
     #instances_actions has been decorated to be the parent function of all commands
+
+@cli.group('s3buckets')
+def s3_actions():
+    "Actions to run on S3 buckets"
 
 @instances_actions.command('list')
 @click.option('--project',default=None,help="Lists out instances only of tag(of name'Project') specified")
@@ -130,7 +136,6 @@ def terminate_stopped_instances(project):
     print('Select serial number of options below to terminate:')
     print('Sl.no #')
     listSl = list(map(lambda i: str(ids[i]['slno']), ids))
-    print(listSl)
     for id in ids:
         print("{}          {}    {}    {}".format(ids[id]['slno'],id,ids[id]['type'],ids[id]['private_dns_name']))
     print("Select serial number of options below to terminate ('Q' to quit) : ",end="")
@@ -160,9 +165,16 @@ def terminate_stopped_instances(project):
             break
         print("Please select a valid serial number ('Q' to quit) : ",end="")
         choice = input();
+    return
 
+@s3_actions.command('list')
+def list_buckets():
+    """Lists out all the buckets present in the account"""
+    for bucket in myS3.buckets.all():
+        print(bucket)
 
     return
+
 
 if __name__ == "__main__":
     cli();
