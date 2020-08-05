@@ -1,4 +1,5 @@
 import boto3
+import botocore
 import click
 import pathlib
 
@@ -172,9 +173,27 @@ def list_buckets():
     """Lists out all the buckets present in the account"""
     for bucket in myS3.buckets.all():
         print(bucket)
-
     return
 
+@s3_actions.command('list-object')
+@click.argument('bucket')
+def list_bucket_object(bucket):
+    """Lists out all the objects present in bucket"""
+    for object in myS3.Bucket(bucket).objects.all():
+        print(object)
+    return
+
+@s3_actions.command('create-bucket')
+@click.argument('newbucketname')
+@click.option('--region',default=False) #optionally create bucket at a specific region
+def create_bucket(newbucketname,region):
+    bucketregion = region or session.region_name #session.region_name pulls up information from the profile region
+    try:
+        myS3.create_bucket(Bucket=newbucketname,CreateBucketConfiguration={'LocationConstraint': bucketregion})
+    except:
+        print('An Error has happened')
+
+    return
 
 if __name__ == "__main__":
     cli();
