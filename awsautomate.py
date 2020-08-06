@@ -185,14 +185,23 @@ def list_bucket_object(bucket):
 
 @s3_actions.command('create-bucket')
 @click.argument('newbucketname')
-@click.option('--region',default=False) #optionally create bucket at a specific region
+@click.option('--region')
 def create_bucket(newbucketname,region):
     bucketregion = region or session.region_name #session.region_name pulls up information from the profile region
     try:
         myS3.create_bucket(Bucket=newbucketname,CreateBucketConfiguration={'LocationConstraint': bucketregion})
-    except:
-        print('An Error has happened')
+    except botocore.exceptions.ClientError as e:
+        print('An Error has occured...')
+        print(e.response)
 
+    return
+
+@s3_actions.command('upload-file')
+@click.argument('bucketname')
+@click.option('--filename',required= True,help="File with relative path to be uploaded")
+@click.option('--asfilename',help="Optional name the file has to be uploaded as")
+def upload_file(bucketname,filename,asfilename):
+    myS3.Bucket(bucketname).upload_file(filename,asfilename,ExtraArgs={'ContentType': 'text/html'})
     return
 
 if __name__ == "__main__":
