@@ -22,6 +22,9 @@ var/
 wheels/
 pip-wheel-metadata/
 
+#upload_folder used for 'upload_file' sub-command in 's3_actions'
+upload_folder/
+
 share/python-wheels/
 *.egg-info/
 .installed.cfg

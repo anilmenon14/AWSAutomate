@@ -1,7 +1,7 @@
 import boto3
 import botocore
 import click
-import pathlib
+from pathlib import Path
 
 session = boto3.Session(profile_name="awsautomate")
 myEc2 = session.resource('ec2')
@@ -16,6 +16,23 @@ def retrieve_instances(project):
     else:
         instances = myEc2.instances.all() # No filters applied
     return instances
+
+def handle_dir_upload(bucketname,dir_name,origParentDir):
+    if dir_name.is_file():
+        print('ERROR: This is not a directory. Please try again with a directory')
+        return
+    for p in dir_name.iterdir():
+        if p.is_dir():handle_dir_upload(bucketname,p,origParentDir)
+        else:
+            uploading_file = p.relative_to(origParentDir).as_posix()
+            print("Uploading: {}".format(uploading_file))
+            try:
+                myS3.Bucket(bucketname).upload_file(uploading_file,uploading_file,ExtraArgs={'ContentType': 'text/html'})
+            except:
+                print('An Error has occured. Check if bucket name and file name is accurate and if you have access to the bucket')
+    return
+
+# end of helper functions
 
 
 @click.group()
@@ -198,11 +215,29 @@ def create_bucket(newbucketname,region):
 
 @s3_actions.command('upload-file')
 @click.argument('bucketname')
-@click.option('--filename',required= True,help="File with relative path to be uploaded")
+@click.option('--filename',required= True,help="File to be uploaded. Should be present in present working directory")
 @click.option('--asfilename',help="Optional name the file has to be uploaded as")
 def upload_file(bucketname,filename,asfilename):
-    myS3.Bucket(bucketname).upload_file(filename,asfilename,ExtraArgs={'ContentType': 'text/html'})
+    if not asfilename:
+        asfilename = filename
+    try:
+        myS3.Bucket(bucketname).upload_file(filename,asfilename,ExtraArgs={'ContentType': 'text/html'})
+    except:
+        print('An Error has occured. Check if bucket name and file name is accurate and if you have access to the bucket')
     return
+
+
+@s3_actions.command('upload-dir')
+@click.argument('bucketname')
+@click.option('--dirname',required= True,type=click.Path(exists=True),help="Directory to be uploaded. Should be present in present working directory")
+def upload_dir(bucketname,dirname):
+    dirname = Path(dirname).resolve() # Conver path to valid directory
+    parentDir = dirname.parents[0] # 1st item of parents stores parent Dir name
+    handle_dir_upload(bucketname,dirname,parentDir)
+
+    return
+
+
 
 if __name__ == "__main__":
     cli();
