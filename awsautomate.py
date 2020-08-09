@@ -185,25 +185,63 @@ def terminate_stopped_instances(project):
         choice = input();
     return
 
-@s3_actions.command('list')
+@s3_actions.command('list-buckets')
 def list_buckets():
     """Lists out all the buckets present in the account"""
     for bucket in myS3.buckets.all():
         print(bucket)
     return
 
-@s3_actions.command('list-object')
-@click.argument('bucket')
-def list_bucket_object(bucket):
-    """Lists out all the objects present in bucket"""
-    for object in myS3.Bucket(bucket).objects.all():
-        print(object)
+@s3_actions.command('list-objects')
+def list_bucket_object():
+    """Interactively choose bucket to list contents of"""
+    bktCnt = 0
+    bktTupleList = []
+    for bucket in myS3.buckets.all():
+        bktCnt += 1
+        bktTupleList.append((bktCnt,bucket))
+    choiceList = list(map(lambda i: str(i[0]),bktTupleList))
+    print(bktTupleList)
+    print(choiceList)
+    for i in bktTupleList:
+        print("{}-------{}".format(i[0],i[1].name))
+    print("Select serial number of bucket to display objects('Q' to quit) : ",end="")
+    choice = input();
+    while True:
+        if choice == 'Q':
+            print('Process cancelled')
+            break
+        elif choice in choiceList:
+            for i in bktTupleList:
+                if i[0] == int(choice):
+                    IdFromChoice = i[1];
+            print("Your choice is '{}'----'{}':".format(choice,IdFromChoice))
+            print('Please confirm (Y/N): ',end='')
+            confirm = input()
+            while True:
+                if confirm.upper() == 'Y':
+                    for object in myS3.Bucket(IdFromChoice.name).objects.all():
+                        print(object)
+                    break
+                elif confirm.upper() == 'N':
+                    print('Cancelled')
+                    break
+                else:
+                    print('Please confirm (Y/N): ',end='')
+                    confirm = input()
+            break
+        print("Please select a valid serial number ('Q' to quit) : ",end="")
+        choice = input();
     return
+#    for object in myS3.Bucket(bucket).objects.all():
+#        print(object)
+#    return
 
 @s3_actions.command('create-bucket')
 @click.argument('newbucketname')
 @click.option('--region')
 def create_bucket(newbucketname,region):
+    """Create a new bucket in region of the profile associated to the script"""
     bucketregion = region or session.region_name #session.region_name pulls up information from the profile region
     try:
         myS3.create_bucket(Bucket=newbucketname,CreateBucketConfiguration={'LocationConstraint': bucketregion})
@@ -218,6 +256,7 @@ def create_bucket(newbucketname,region):
 @click.option('--filename',required= True,help="File to be uploaded. Should be present in present working directory")
 @click.option('--asfilename',help="Optional name the file has to be uploaded as")
 def upload_file(bucketname,filename,asfilename):
+    """Upload file to an S3 bucket"""
     if not asfilename:
         asfilename = filename
     try:
@@ -231,6 +270,7 @@ def upload_file(bucketname,filename,asfilename):
 @click.argument('bucketname')
 @click.option('--dirname',required= True,type=click.Path(exists=True),help="Directory to be uploaded. Should be present in present working directory")
 def upload_dir(bucketname,dirname):
+    """Upload directory to an S3 bucket"""
     dirname = Path(dirname).resolve() # Conver path to valid directory
     parentDir = dirname.parents[0] # 1st item of parents stores parent Dir name
     handle_dir_upload(bucketname,dirname,parentDir)
