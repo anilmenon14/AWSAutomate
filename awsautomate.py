@@ -201,8 +201,6 @@ def list_bucket_object():
         bktCnt += 1
         bktTupleList.append((bktCnt,bucket))
     choiceList = list(map(lambda i: str(i[0]),bktTupleList))
-    print(bktTupleList)
-    print(choiceList)
     for i in bktTupleList:
         print("{}-------{}".format(i[0],i[1].name))
     print("Select serial number of bucket to display objects('Q' to quit) : ",end="")
