@@ -2,6 +2,7 @@ import boto3
 import botocore
 import click
 from pathlib import Path
+import mimetypes
 
 session = boto3.Session(profile_name="awsautomate")
 myEc2 = session.resource('ec2')
@@ -25,9 +26,10 @@ def handle_dir_upload(bucketname,dir_name,origParentDir):
         if p.is_dir():handle_dir_upload(bucketname,p,origParentDir)
         else:
             uploading_file = p.relative_to(origParentDir).as_posix()
+            contenttype = mimetypes.guess_type(uploading_file)[0] or 'text/plain'
             print("Uploading: {}".format(uploading_file))
             try:
-                myS3.Bucket(bucketname).upload_file(uploading_file,uploading_file,ExtraArgs={'ContentType': 'text/html'})
+                myS3.Bucket(bucketname).upload_file(uploading_file,uploading_file,ExtraArgs={'ContentType': contenttype})
             except:
                 print('An Error has occured. Check if bucket name and file name is accurate and if you have access to the bucket')
     return
@@ -255,10 +257,14 @@ def create_bucket(newbucketname,region):
 @click.option('--asfilename',help="Optional name the file has to be uploaded as")
 def upload_file(bucketname,filename,asfilename):
     """Upload file to an S3 bucket"""
+    contenttype = mimetypes.guess_type(filename)[0] or 'text/plain'
+    cwd = Path.cwd().resolve()
+    filename = Path(filename).resolve() #converting to Path object
+    relFileName = filename.relative_to(cwd).as_posix()
     if not asfilename:
-        asfilename = filename
+        asfilename = relFileName
     try:
-        myS3.Bucket(bucketname).upload_file(filename,asfilename,ExtraArgs={'ContentType': 'text/html'})
+        myS3.Bucket(bucketname).upload_file(relFileName,asfilename,ExtraArgs={'ContentType': contenttype})
     except:
         print('An Error has occured. Check if bucket name and file name is accurate and if you have access to the bucket')
     return
