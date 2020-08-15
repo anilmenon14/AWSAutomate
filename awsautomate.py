@@ -1,12 +1,21 @@
 import boto3
 import botocore
 import click
-from pathlib import Path
 import mimetypes
+from pathlib import Path
+from functools import reduce
+from hashlib import md5
+
 
 session = boto3.Session(profile_name="awsautomate")
 myEc2 = session.resource('ec2')
 myS3 = session.resource('s3')
+
+myS3FileChunkSize = 8388608
+myS3transferConfig = boto3.s3.transfer.TransferConfig(
+            multipart_threshold = myS3FileChunkSize,
+            multipart_chunksize = myS3FileChunkSize
+        )
 
 #helper functions
 
@@ -34,8 +43,63 @@ def handle_dir_upload(bucketname,dir_name,origParentDir):
                 print('An Error has occured. Check if bucket name and file name is accurate and if you have access to the bucket')
     return
 
+
+def read_manifest():
+    """Load contents from manifest.txt text file to a dictionary"""
+    etags = {}
+    with open('manifest.txt','r+') as file:
+        for line in file.readlines():
+            etags[line.split(",")[0].strip('"')] = line.split(",")[1].rstrip().strip('"')
+    return etags
+
+def sync_etags_manifest(bucketname):
+    """Access bucket and load Etags from files in S3 and place in manifest.txt"""
+    try:
+        bucketIter = myS3.Bucket(bucketname).objects.all()
+        eTagDict = {bucketname+":"+o.key:o.e_tag.strip('"') for o in bucketIter}
+        #Update manifest variable
+        for i in eTagDict:
+            manifest[i] = eTagDict[i]
+        #update manifest.txt
+        with open('manifest.txt','r+') as file:
+            file.truncate()
+        with open('manifest.txt','r+') as file:
+            for m in manifest:
+                file.write(m+","+manifest[m])
+                file.write('\n')
+    except NoSuchBucket as error:
+        print('No bucket of this name exists')
+    return
+
+def hash_data_gen(data):
+    """Generate md5 hash for data."""
+    generatedHash = md5()
+    generatedHash.update(data)
+    return generatedHash
+
+def generate_etag(path):
+    """Generate ETag for local files for comparison to AWS S3 retrieved ETags"""
+    hashes = []
+    with open(path,'rb') as file:
+        while True:
+            data = file.read(myS3FileChunkSize)
+            if not data:
+                break;
+            hashes.append(hash_data_gen(data))
+        if not hashes: #no files
+            return None
+        elif len(hashes) == 1: #only one file
+            return hashes[0]
+        else: #multiple files
+            #hash all the hashes to a final hash
+            concatHash = hash_data_gen(reduce(lambda x,y: x+y , (h.digest() for h in hashes)))
+            return "{}-{}".format(concatHash.hexdigest(),len(hashes))
+
+
+
 # end of helper functions
 
+manifest = read_manifest() #load manifest file
 
 @click.group()
 def cli():
@@ -253,20 +317,35 @@ def create_bucket(newbucketname,region):
 
 @s3_actions.command('upload-file')
 @click.argument('bucketname')
-@click.option('--filename',required= True,help="File to be uploaded. Should be present in present working directory")
-@click.option('--asfilename',help="Optional name the file has to be uploaded as")
+@click.option('--filename',required= True,help="File to be uploaded.Provide relative path from current working directory or full path from root")
+@click.option('--asfilename',help="Optional name the file has to be uploaded as (Do not specify if required to be same as 'filename')")
 def upload_file(bucketname,filename,asfilename):
     """Upload file to an S3 bucket"""
+    sync_etags_manifest(bucketname); #loads Etags from s3 bucket as latest source of truth into manifest.txt
     contenttype = mimetypes.guess_type(filename)[0] or 'text/plain'
+
     cwd = Path.cwd().resolve()
     filename = Path(filename).resolve() #converting to Path object
-    relFileName = filename.relative_to(cwd).as_posix()
-    if not asfilename:
-        asfilename = relFileName
+
     try:
-        myS3.Bucket(bucketname).upload_file(relFileName,asfilename,ExtraArgs={'ContentType': contenttype})
-    except:
+        relFileName = filename.relative_to(cwd).as_posix()
+        etag = generate_etag(relFileName)
+        print(relFileName)
+        if manifest.get(bucketname+":"+relFileName, '') == etag:
+            print("File : {} , has not changed since last upload. Not uploading")
+            return None
+        if not asfilename:
+            asfilename = relFileName
+        print("Uploading: {}".format(relFileName))
+        myS3.Bucket(bucketname).upload_file(relFileName,asfilename,ExtraArgs={'ContentType': contenttype},Config=myS3transferConfig)
+    except ValueError as error:
+        print('Value Error:',end="")
+        print(error)
+    except FileNotFoundError as error:
+        print('File name is incorrect or does not exist')
+    except :
         print('An Error has occured. Check if bucket name and file name is accurate and if you have access to the bucket')
+
     return
 
 
@@ -275,8 +354,9 @@ def upload_file(bucketname,filename,asfilename):
 @click.option('--dirname',required= True,type=click.Path(exists=True),help="Directory to be uploaded. Should be present in present working directory")
 def upload_dir(bucketname,dirname):
     """Upload directory to an S3 bucket"""
+    sync_etags_manifest(bucketname); #loads Etags from s3 bucket as latest source of truth into manifest.txt
     dirname = Path(dirname).resolve() # Conver path to valid directory
-    parentDir = dirname.parents[0] # 1st item of parents stores parent Dir name
+    parentDir = Path.cwd()
     handle_dir_upload(bucketname,dirname,parentDir)
 
     return
