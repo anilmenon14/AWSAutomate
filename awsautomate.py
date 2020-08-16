@@ -36,11 +36,15 @@ def handle_dir_upload(bucketname,dir_name,origParentDir):
         else:
             uploading_file = p.relative_to(origParentDir).as_posix()
             contenttype = mimetypes.guess_type(uploading_file)[0] or 'text/plain'
-            print("Uploading: {}".format(uploading_file))
-            try:
-                myS3.Bucket(bucketname).upload_file(uploading_file,uploading_file,ExtraArgs={'ContentType': contenttype})
-            except:
-                print('An Error has occured. Check if bucket name and file name is accurate and if you have access to the bucket')
+            etag = generate_etag(uploading_file)
+            if manifest.get(bucketname+":"+uploading_file, '') == etag:
+                print("File : {} , has not changed since last upload. Not uploading".format(uploading_file))
+            else:
+                print("Uploading: {}".format(uploading_file))
+                try:
+                    myS3.Bucket(bucketname).upload_file(uploading_file,uploading_file,ExtraArgs={'ContentType': contenttype})
+                except:
+                    print('An Error has occured. Check if bucket name and file name is accurate and if you have access to the bucket')
     return
 
 
@@ -87,9 +91,10 @@ def generate_etag(path):
                 break;
             hashes.append(hash_data_gen(data))
         if not hashes: #no files
-            return None
+            # Generate hash with '' since S3 seems to be doing same and need to mirror this to compare
+            return hash_data_gen(''.encode('utf-8')).hexdigest()
         elif len(hashes) == 1: #only one file
-            return hashes[0]
+            return hashes[0].hexdigest()
         else: #multiple files
             #hash all the hashes to a final hash
             concatHash = hash_data_gen(reduce(lambda x,y: x+y , (h.digest() for h in hashes)))
@@ -330,9 +335,8 @@ def upload_file(bucketname,filename,asfilename):
     try:
         relFileName = filename.relative_to(cwd).as_posix()
         etag = generate_etag(relFileName)
-        print(relFileName)
         if manifest.get(bucketname+":"+relFileName, '') == etag:
-            print("File : {} , has not changed since last upload. Not uploading")
+            print("File : {} , has not changed since last upload. Not uploading".format(filename))
             return None
         if not asfilename:
             asfilename = relFileName
