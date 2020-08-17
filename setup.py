@@ -4,7 +4,7 @@ setup(
     name='awsautomate',
     version='0.2',
     author="Anil Menon",
-    description="Utility to manage AWS instances",
+    description="Utility to manage AWS resources",
     license="GPLv3+",
     packages=[''],
     url="https://github.com/anilmenon14/AWSAutomate",

@@ -10,7 +10,6 @@ from hashlib import md5
 session = boto3.Session(profile_name="awsautomate")
 myEc2 = session.resource('ec2')
 myS3 = session.resource('s3')
-
 myS3FileChunkSize = 8388608
 myS3transferConfig = boto3.s3.transfer.TransferConfig(
             multipart_threshold = myS3FileChunkSize,
@@ -308,10 +307,9 @@ def list_bucket_object():
 
 @s3_actions.command('create-bucket')
 @click.argument('newbucketname')
-@click.option('--region')
-def create_bucket(newbucketname,region):
+def create_bucket(newbucketname):
     """Create a new bucket in region of the profile associated to the script"""
-    bucketregion = region or session.region_name #session.region_name pulls up information from the profile region
+    bucketregion = session.region_name #session.region_name pulls up information from the profile region
     try:
         myS3.create_bucket(Bucket=newbucketname,CreateBucketConfiguration={'LocationConstraint': bucketregion})
     except botocore.exceptions.ClientError as e:
