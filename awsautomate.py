@@ -7,15 +7,6 @@ from functools import reduce
 from hashlib import md5
 
 
-session = boto3.Session(profile_name="awsautomate")
-myEc2 = session.resource('ec2')
-myS3 = session.resource('s3')
-myS3FileChunkSize = 8388608
-myS3transferConfig = boto3.s3.transfer.TransferConfig(
-            multipart_threshold = myS3FileChunkSize,
-            multipart_chunksize = myS3FileChunkSize
-        )
-
 #helper functions
 
 def retrieve_instances(project):
@@ -106,8 +97,18 @@ def generate_etag(path):
 manifest = read_manifest() #load manifest file
 
 @click.group()
-def cli():
+@click.option('--profile',default='awsautomate',help="AWS profile name to use for the command. Default is 'awsautomate'")
+def cli(profile):
     "Main CLI group calling instances, volumes and snapshot groups"
+    global session, myEc2, myS3, myS3FileChunkSize, myS3transferConfig #These variables are required to be available globally
+    session = boto3.Session(profile_name=profile)
+    myEc2 = session.resource('ec2')
+    myS3 = session.resource('s3')
+    myS3FileChunkSize = 8388608
+    myS3transferConfig = boto3.s3.transfer.TransferConfig(
+                multipart_threshold = myS3FileChunkSize,
+                multipart_chunksize = myS3FileChunkSize
+            )
 
 @cli.group('instances')
 def instances_actions():
@@ -288,7 +289,10 @@ def list_bucket_object():
             confirm = input()
             while True:
                 if confirm.upper() == 'Y':
-                    for object in myS3.Bucket(IdFromChoice.name).objects.all():
+                    bucketObjects = myS3.Bucket(IdFromChoice.name).objects.all()
+                    if not list(bucketObjects):
+                        print('No objects currently in the bucket {}'.format(IdFromChoice.name))
+                    for object in bucketObjects:
                         print(object)
                     break
                 elif confirm.upper() == 'N':

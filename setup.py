@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='awsautomate',
-    version='0.2',
+    version='0.3',
     author="Anil Menon",
     description="Utility to manage AWS resources",
     license="GPLv3+",
