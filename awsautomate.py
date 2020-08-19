@@ -119,6 +119,11 @@ def instances_actions():
 def s3_actions():
     "Actions to run on S3 buckets"
 
+@cli.group('autoscaling')
+def asg_actions():
+    "Actions to run for auto scaling"
+
+
 @instances_actions.command('list')
 @click.option('--project',default=None,help="Lists out instances only of tag(of name'Project') specified")
 def list_instances(project):
@@ -368,6 +373,9 @@ def upload_dir(bucketname,dirname):
     return
 
 
+@asg_actions.command('list-asg')
+def list_all_asg():
+    return
 
 if __name__ == "__main__":
     cli();
