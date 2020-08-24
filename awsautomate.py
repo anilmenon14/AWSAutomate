@@ -100,10 +100,11 @@ manifest = read_manifest() #load manifest file
 @click.option('--profile',default='awsautomate',help="AWS profile name to use for the command. Default is 'awsautomate'")
 def cli(profile):
     "Main CLI group calling instances, volumes and snapshot groups"
-    global session, myEc2, myS3, myS3FileChunkSize, myS3transferConfig #These variables are required to be available globally
+    global session, myEc2, myS3,myAsgClient, myS3FileChunkSize, myS3transferConfig #These variables are required to be available globally
     session = boto3.Session(profile_name=profile)
     myEc2 = session.resource('ec2')
     myS3 = session.resource('s3')
+    myAsgClient = session.client('autoscaling')
     myS3FileChunkSize = 8388608
     myS3transferConfig = boto3.s3.transfer.TransferConfig(
                 multipart_threshold = myS3FileChunkSize,
@@ -136,6 +137,7 @@ def list_instances(project):
         tags = {tag['Key']: tag['Value'] for tag in i.tags or []}
         print((' , '.join([
         tags.get('Project',"<no 'Project' tag>")
+        ,tags.get('aws:autoscaling:groupName',"<Not linked to ASG>")
         ,i.id
         ,i.instance_type
         ,i.placement['AvailabilityZone']
@@ -375,6 +377,11 @@ def upload_dir(bucketname,dirname):
 
 @asg_actions.command('list-asg')
 def list_all_asg():
+    asglist = myAsgClient.describe_auto_scaling_groups()
+    for i in asglist['AutoScalingGroups']:
+        print("Auto Scaling Group name: {}".format(i['AutoScalingGroupName']))
+        for inst in i['Instances']:
+            print("             {}".format(inst['InstanceId']))
     return
 
 if __name__ == "__main__":
