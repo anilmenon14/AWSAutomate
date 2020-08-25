@@ -379,7 +379,7 @@ def upload_dir(bucketname,dirname):
 def list_all_asg():
     asglist = myAsgClient.describe_auto_scaling_groups()
     for i in asglist['AutoScalingGroups']:
-        print("Auto Scaling Group name: {}".format(i['AutoScalingGroupName']))
+        print("Auto Scaling Group name: {} (Desired: {}, Min: {}, Max: {})".format(i['AutoScalingGroupName'], i['DesiredCapacity'],i['MinSize'],i['MaxSize']))
         for inst in i['Instances']:
             print("             {}".format(inst['InstanceId']))
     return
