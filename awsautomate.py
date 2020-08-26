@@ -380,9 +380,30 @@ def list_all_asg():
     asglist = myAsgClient.describe_auto_scaling_groups()
     for i in asglist['AutoScalingGroups']:
         print("Auto Scaling Group name: {} (Desired: {}, Min: {}, Max: {})".format(i['AutoScalingGroupName'], i['DesiredCapacity'],i['MinSize'],i['MaxSize']))
+        if len(i['Instances']):
+            print("    Instances:")
         for inst in i['Instances']:
             print("             {}".format(inst['InstanceId']))
     return
 
+@asg_actions.command('list-policies')
+def list_policies():
+    polList = myAsgClient.describe_policies()
+    print("\n")
+    print("ASG Name/Policy Name/Adjustment Type/Scaling Adjustment")
+    print("-------------------------------------------------------")
+    for i in polList['ScalingPolicies']:
+        print("{} / {} / {} / {}".format(i.get('AutoScalingGroupName'),i.get('PolicyName'),i.get('AdjustmentType',"<none>"),i.get('ScalingAdjustment',"<none>")))
+    return
+
+@asg_actions.command('execute-policy')
+@click.option('--asgname',required=True,help='Provide exact name of Autoscaling group')
+@click.option('--policy',required=True,help='Provide exact name of Policy.Hint: Review the list-policies command output to find more details')
+def execute_policy(asgname,policy):
+    myAsgClient.execute_policy(
+    AutoScalingGroupName=asgname,
+    PolicyName=policy
+    )
+    return
 if __name__ == "__main__":
     cli();
