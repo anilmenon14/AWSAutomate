@@ -109,3 +109,23 @@ Options:
                 working directory  [required]
 
 ### Auto Scaling group commands
+
+#### List Autoscaling AutoScalingGroups
+`pipenv run python awsautomate.py autoscaling list-asg`
+
+List all the Autoscaling groups present
+
+#### List all policies
+`pipenv run python awsautomate.py autoscaling list-policies`
+
+List Policies available for each of the available Autoscaling groups
+
+#### Execute Policy
+`pipenv run python awsautomate.py autoscaling execute-policy`
+
+Execute a specific policy within an auto scaling group
+
+Options:
+*asgname* TEXT  Provide exact name of Autoscaling group  [required]
+*policy* TEXT   Provide exact name of Policy.Hint: Review the list-policies
+                command output to find more details  [required]

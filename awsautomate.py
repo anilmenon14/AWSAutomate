@@ -377,6 +377,7 @@ def upload_dir(bucketname,dirname):
 
 @asg_actions.command('list-asg')
 def list_all_asg():
+    """List all the Autoscaling groups present"""
     asglist = myAsgClient.describe_auto_scaling_groups()
     for i in asglist['AutoScalingGroups']:
         print("Auto Scaling Group name: {} (Desired: {}, Min: {}, Max: {})".format(i['AutoScalingGroupName'], i['DesiredCapacity'],i['MinSize'],i['MaxSize']))
@@ -388,6 +389,7 @@ def list_all_asg():
 
 @asg_actions.command('list-policies')
 def list_policies():
+    """List Policies available for each of the available Autoscaling groups"""
     polList = myAsgClient.describe_policies()
     print("\n")
     print("ASG Name/Policy Name/Adjustment Type/Scaling Adjustment")
@@ -400,6 +402,7 @@ def list_policies():
 @click.option('--asgname',required=True,help='Provide exact name of Autoscaling group')
 @click.option('--policy',required=True,help='Provide exact name of Policy.Hint: Review the list-policies command output to find more details')
 def execute_policy(asgname,policy):
+    """Execute a specific policy within an auto scaling group"""
     myAsgClient.execute_policy(
     AutoScalingGroupName=asgname,
     PolicyName=policy
