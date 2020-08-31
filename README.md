@@ -4,7 +4,8 @@ Automate tasks to manage services in AWS
 
 ## About
 
- This is a project containing common commands that can be used to run view/ execute commands from command line
+ This is a project containing common commands that can be used to run view/ execute commands from command line.   
+ Any inputs/improvements are welcome. Please feel free to raise a pull requests to add to the command list.
 
 ## Configuration
 
@@ -73,59 +74,55 @@ Options:
 ### S3 commands
 
 #### List buckets
-`pipenv run python awsautomate.py s3buckets list-buckets`
+`pipenv run python awsautomate.py s3buckets list-buckets`  
 
-Lists out all the buckets present in the account
+Lists out all the buckets present in the account  
 
 #### List objects
-`pipenv run python awsautomate.py s3buckets list-objects`
+`pipenv run python awsautomate.py s3buckets list-objects`  
 
-Interactively choose bucket to list contents of
+Interactively choose bucket to list contents of  
 
 #### Create bucket
-`pipenv run python awsautomate.py s3buckets create-bucket <newbucketname>`
+`pipenv run python awsautomate.py s3buckets create-bucket <newbucketname>`  
 
-Create a new bucket (replace <newbucketname> with desired name) in region of the profile associated to the script
+Create a new bucket (replace <newbucketname> with desired name) in region of the profile associated to the script  
 
 #### Upload file
-`pipenv run python awsautomate.py s3buckets upload-file <bucketname>`
+`pipenv run python awsautomate.py s3buckets upload-file <bucketname>`  
 
-Upload file to an S3 bucket (replace <bucketname> with existing bucket name)
+Upload file to an S3 bucket (replace <bucketname> with existing bucket name)  
 
 Options:
-*filename* TEXT    File to be uploaded.Provide relative path from current
-                     working directory or full path from root  [required]
+*filename* TEXT    File to be uploaded.Provide relative path from current working directory or full path from root  [required]  
 
-*asfilename* TEXT  Optional name the file has to be uploaded as (Do not
-                     specify if required to be same as 'filename')
+*asfilename* TEXT  Optional name the file has to be uploaded as (Do not specify if required to be same as 'filename')  
 
 #### Upload dir
-`pipenv run python awsautomate.py s3buckets upload-dir <bucketname>`
+`pipenv run python awsautomate.py s3buckets upload-dir <bucketname>`  
 
-Upload directory to an S3 bucket (replace <bucketname> with existing bucket name)
+Upload directory to an S3 bucket (replace <bucketname> with existing bucket name)  
 
-Options:
-*dirname* PATH  Directory to be uploaded. Should be present in present
-                working directory  [required]
+Options:  
+*dirname* PATH  Directory to be uploaded. Should be present in present working directory  [required]  
 
 ### Auto Scaling group commands
 
 #### List Autoscaling AutoScalingGroups
-`pipenv run python awsautomate.py autoscaling list-asg`
+`pipenv run python awsautomate.py autoscaling list-asg`  
 
-List all the Autoscaling groups present
+List all the Autoscaling groups present  
 
 #### List all policies
-`pipenv run python awsautomate.py autoscaling list-policies`
+`pipenv run python awsautomate.py autoscaling list-policies`  
 
-List Policies available for each of the available Autoscaling groups
+List Policies available for each of the available Autoscaling groups  
 
 #### Execute Policy
-`pipenv run python awsautomate.py autoscaling execute-policy`
+`pipenv run python awsautomate.py autoscaling execute-policy`  
 
-Execute a specific policy within an auto scaling group
+Execute a specific policy within an auto scaling group  
 
-Options:
-*asgname* TEXT  Provide exact name of Autoscaling group  [required]
-*policy* TEXT   Provide exact name of Policy.Hint: Review the list-policies
-                command output to find more details  [required]
+Options:  
+*asgname* TEXT  Provide exact name of Autoscaling group  [required]  
+*policy* TEXT   Provide exact name of Policy. Hint: Review the list-policies command output to find more details  [required]  
